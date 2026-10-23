@@ -1,0 +1,40 @@
+name: X check
+
+on:
+  pull_request:
+    paths-ignore:
+      - skip-pr.txt
+  workflow_dispatch:
+    inputs:
+      outcome:
+        description: Dispatch result
+        required: true
+        type: choice
+        options:
+          - pass
+          - fail
+        default: pass
+
+permissions:
+  contents: read
+
+jobs:
+  X:
+    name: X
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Set outcome
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            outcome="${{ inputs.outcome }}"
+          else
+            outcome="$(cat outcome.txt 2>/dev/null || printf pass)"
+          fi
+          printf 'selected outcome: %s\n' "$outcome"
+          if [[ "$outcome" != pass ]]; then
+            printf 'requested failure\n' >&2
+            exit 1
+          fi
