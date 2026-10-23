@@ -14,6 +14,11 @@ on:
           - pass
           - fail
         default: pass
+      delay_seconds:
+        description: Seconds to delay this run
+        required: false
+        type: number
+        default: 0
 
 permissions:
   contents: read
@@ -33,6 +38,12 @@ jobs:
           else
             outcome="$(cat outcome.txt 2>/dev/null || printf pass)"
           fi
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            delay="${{ inputs.delay_seconds }}"
+          else
+            delay="$(cat delay.txt 2>/dev/null || printf 0)"
+          fi
+          sleep "$delay"
           printf 'selected outcome: %s\n' "$outcome"
           if [[ "$outcome" != pass ]]; then
             printf 'requested failure\n' >&2
